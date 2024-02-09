@@ -12,7 +12,7 @@
  * and the remaining 60 bit represent the size.
  */
 typedef struct memory_block_struct {
-    size_t block_size_alloc;
+    size_t is_allocated;
     struct memory_block_struct *next;
 } memory_block_t;
 

@@ -19,7 +19,7 @@ memory_block_t *free_head;
  */
 bool is_allocated(memory_block_t *block) {
     assert(block != NULL);
-    return block->block_size_alloc & 0x1;
+    return block->is_allocated & 0x1;
 }
 
 /*
@@ -27,7 +27,7 @@ bool is_allocated(memory_block_t *block) {
  */
 void allocate(memory_block_t *block) {
     assert(block != NULL);
-    block->block_size_alloc |= 0x1;
+    block->is_allocated |= 0x1;
 }
 
 
@@ -36,7 +36,7 @@ void allocate(memory_block_t *block) {
  */
 void deallocate(memory_block_t *block) {
     assert(block != NULL);
-    block->block_size_alloc &= ~0x1;
+    block->is_allocated &= ~0x1;
 }
 
 /*
@@ -44,7 +44,7 @@ void deallocate(memory_block_t *block) {
  */
 size_t get_size(memory_block_t *block) {
     assert(block != NULL);
-    return block->block_size_alloc & ~(ALIGNMENT-1);
+    return block->is_allocated & ~(ALIGNMENT-1);
 }
 
 /*
@@ -64,7 +64,7 @@ void put_block(memory_block_t *block, size_t size, bool alloc) {
     assert(block != NULL);
     assert(size % ALIGNMENT == 0);
     assert(alloc >> 1 == 0);
-    block->block_size_alloc = size | alloc;
+    block->is_allocated = size | alloc;
     block->next = NULL;
 }
 
