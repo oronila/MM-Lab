@@ -93,7 +93,7 @@ static FILE *read_args(int argc, char **argv) {
     int option;
     FILE *infile = NULL;
 
-    while ((option = getopt(argc, argv, ":i:s:c")) != -1) {
+    while ((option = getopt(argc, argv, "i:sc")) != -1) {
         switch(option) {
             case 'i':
                 if ((infile = fopen(optarg, "r")) == NULL) {

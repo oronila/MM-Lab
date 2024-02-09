@@ -12,7 +12,7 @@
  * and the remaining 60 bit represent the size.
  */
 typedef struct memory_block_struct {
-    size_t is_allocated;
+    size_t block_metadata; // This field stores the block size in bits [63:4], and allocation status in bit 0
     struct memory_block_struct *next;
 } memory_block_t;
 
