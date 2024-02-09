@@ -17,9 +17,9 @@ memory_block_t *free_head;
 /*
  * block_metadata - returns true if a block is marked as allocated.
  */
-bool block_metadata(memory_block_t *block) {
+bool is_allocated(memory_block_t *block) {
     assert(block != NULL);
-    return block->block_metadata & 0x1;
+    return block->is_allocated & 0x1;
 }
 
 /*
