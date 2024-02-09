@@ -19,7 +19,7 @@ memory_block_t *free_head;
  */
 bool is_allocated(memory_block_t *block) {
     assert(block != NULL);
-    return block->is_allocated & 0x1;
+    return block->block_metadata & 0x1;
 }
 
 /*
