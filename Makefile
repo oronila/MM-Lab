@@ -3,7 +3,7 @@ CC = gcc
 DEBUG_FLAG = -O0
 DEPLOY_FLAG = -O2
 OPT_FLAG = $(DEPLOY_FLAG) # -O0 for use with GDB, -O2 for testing performance and is the default setting
-CFLAGS = -Wall $(OPT_FLAG) -Werror -ggdb
+CFLAGS = -Wall $(OPT_FLAG) -Werror -g3
 
 all: runner performance gprof_performance unittest
 support.o: support.c support.h
