@@ -96,6 +96,7 @@ memory_block_t *find(size_t size) {
     // STUDENT TODO (maybe coalesce blocks here if seen an opprotunity)
     memory_block_t* find_block = free_head;
     while (find_block && free_head->block_metadata < size + ALIGNMENT) {
+        // printf("size = %lu\n", find_block->block_metadata);
         find_block = get_next(find_block);
     }
 
@@ -205,27 +206,26 @@ void ufree(void *ptr) {
     if (is_allocated(free_block)) {
         deallocate(free_block);
         // don't worry about coalescening right now
-        
-        if (free_head > free_block) {
-            memory_block_t* temp_block = free_head;
-            free_head = free_block;
-            free_head->next = temp_block;
-        } else {
-            memory_block_t* block_position_before = free_head;
-            memory_block_t* block_position = free_head->next;
-            while (block_position && block_position < free_block) {
-                block_position_before = block_position; // could simplify this using block_position->next later
-                block_position = get_next(block_position);
+        free_block->next = free_head;
+        free_head = free_block;
+        // if (free_head > free_block) {
+            
+        // } else {
+        //     memory_block_t* block_position_before = free_head;
+        //     memory_block_t* block_position = free_head->next;
+        //     while (block_position && block_position < free_block) {
+        //         block_position_before = block_position; // could simplify this using block_position->next later
+        //         block_position = get_next(block_position);
                 
-            }
-            if (block_position == NULL) {
-                block_position_before->next = free_block;
-            } else {
-                memory_block_t* temp_block = block_position_before;
-                block_position_before->next = free_block;
-                free_block->next = temp_block;
-            }
-        }
+        //     }
+        //     if (!block_position) {
+        //         block_position_before->next = free_block;
+        //     } else {
+        //         memory_block_t* temp_block = block_position_before;
+        //         block_position_before->next = free_block;
+        //         free_block->next = temp_block;
+        //     }
+        // }
     } else {
         // throw a double free error here
     }
