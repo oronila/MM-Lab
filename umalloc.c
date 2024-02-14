@@ -95,7 +95,7 @@ memory_block_t *get_block(void *payload) {
 memory_block_t *find(size_t size) {
     // STUDENT TODO (maybe coalesce blocks here if seen an opprotunity)
     memory_block_t* find_block = free_head;
-    while (find_block && get_size(free_head) <= size + ALIGNMENT) {
+    while (find_block && get_size(find_block) <= size + ALIGNMENT) {
         // printf("size = %lu\n", find_block->block_metadata);
         find_block = get_next(find_block);
     }
@@ -124,7 +124,7 @@ memory_block_t *split(memory_block_t *block, size_t size) {
     memory_block_t* block_before = free_head;
     memory_block_t* store_block = block->next;
     // only occurs after malloc calls
-    if (size >= get_size(block) + ALIGNMENT) {
+    if (size >= get_size(block)) {
         while (get_next(block_before) && get_next(block_before) != block) {
             block_before = get_next(block_before);
         }
