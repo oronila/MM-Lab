@@ -196,7 +196,7 @@ void *umalloc(size_t size) {
     if (free_block) {
         free_block = split(free_block, size);
     } else {
-        free_block = extend(size * 4);
+        free_block = extend(size);
         if (free_head > free_block) {
             free_block->next = free_head;
             free_head = free_block;
