@@ -95,7 +95,7 @@ memory_block_t *get_block(void *payload) {
 memory_block_t *find(size_t size) {
     // STUDENT TODO (maybe coalesce blocks here if seen an opprotunity)
     memory_block_t* find_block = free_head;
-    while (find_block && free_head->block_metadata < size + ALIGNMENT) {
+    while (find_block && get_size(free_head) <= size + ALIGNMENT) {
         // printf("size = %lu\n", find_block->block_metadata);
         find_block = get_next(find_block);
     }
@@ -163,8 +163,12 @@ memory_block_t *split(memory_block_t *block, size_t size) {
  */
 memory_block_t *coalesce(memory_block_t *block) {
     // only occurs after free calls
+    if (block + (get_size(block) / 16) + ALIGNMENT == block->next) {
+        put_block(block, ALIGNMENT + get_size(block->next) + get_size(block), false);
+        block->next = block->next->next;
+    }
     //* STUDENT TODO
-    return NULL;
+    return block;
 }
 
 
@@ -223,6 +227,7 @@ void ufree(void *ptr) {
         if (free_head > free_block) {
             free_block->next = free_head;
             free_head = free_block;
+            coalesce(free_head);
         } else {
             memory_block_t* block_position = free_head;
             while (get_next(block_position) && get_next(block_position) < free_block) {
@@ -230,6 +235,8 @@ void ufree(void *ptr) {
             }
             free_block->next = block_position->next;
             block_position->next = free_block;
+            coalesce(free_block);
+            coalesce(block_position);
         }
     } else {
         // throw a double free error here
