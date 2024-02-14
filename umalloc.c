@@ -107,10 +107,11 @@ memory_block_t *find(size_t size) {
  * extend - extends the heap if more memory is required.
  */
 memory_block_t *extend(size_t size) {
-    memory_block_t* extra_block = csbrk(size + ALIGNMENT);
+    memory_block_t* extra_block = csbrk(size + PAGESIZE);
     if (extra_block == NULL) {
         return NULL;
     }
+    
     put_block(extra_block, size, false);
     //* STUDENT TODO
     return extra_block;
@@ -123,7 +124,7 @@ memory_block_t *split(memory_block_t *block, size_t size) {
     memory_block_t* block_before = free_head;
     memory_block_t* store_block = block->next;
     // only occurs after malloc calls
-    if (size >= block->block_metadata + ALIGNMENT) {
+    if (size >= get_size(block) + ALIGNMENT) {
         while (get_next(block_before) && get_next(block_before) != block) {
             block_before = get_next(block_before);
         }
@@ -137,7 +138,7 @@ memory_block_t *split(memory_block_t *block, size_t size) {
         allocated_block = free_head;
         put_block(allocated_block, size, true);
         free_head += (size / ALIGNMENT) + 1;
-        put_block(free_head, old_size, false);
+        put_block(free_head, old_size - (size + ALIGNMENT), false);
         free_head->next = store_block;
         return allocated_block;
     } 
@@ -151,7 +152,7 @@ memory_block_t *split(memory_block_t *block, size_t size) {
     allocated_block = block;
     put_block(allocated_block, size, true);
     block += (size / ALIGNMENT) + 1;
-    put_block(block, old_size, false);
+    put_block(block, old_size - (size + ALIGNMENT), false);
     block->next = store_block;
     block_before->next = block; // this is only extra line needed
     return allocated_block;
@@ -173,12 +174,12 @@ memory_block_t *coalesce(memory_block_t *block) {
  * along with allocating initial memory.
  */
 int uinit() {
-    free_head = csbrk(PAGESIZE * 10);
+    free_head = csbrk(PAGESIZE * 4);
     if(free_head == NULL) {
         return -1;
     }
 
-    put_block(free_head, PAGESIZE * 10, false);
+    put_block(free_head, PAGESIZE * 4, false);
     return 0;
 }
 
@@ -191,7 +192,19 @@ void *umalloc(size_t size) {
     if (free_block) {
         free_block = split(free_block, size);
     } else {
-        free_block = extend(size);
+        free_block = extend(size * 4);
+        if (free_head > free_block) {
+            free_block->next = free_head;
+            free_head = free_block;
+        } else {
+            memory_block_t* block_position = free_head;
+            while (get_next(block_position) && get_next(block_position) < free_block) {
+                block_position = get_next(block_position);
+            }
+            free_block->next = block_position->next;
+            block_position->next = free_block;
+        }
+        free_block = split(free_block, size);
     }
     
     return free_block + 1;
@@ -206,26 +219,18 @@ void ufree(void *ptr) {
     if (is_allocated(free_block)) {
         deallocate(free_block);
         // don't worry about coalescening right now
-        free_block->next = free_head;
-        free_head = free_block;
-        // if (free_head > free_block) {
-            
-        // } else {
-        //     memory_block_t* block_position_before = free_head;
-        //     memory_block_t* block_position = free_head->next;
-        //     while (block_position && block_position < free_block) {
-        //         block_position_before = block_position; // could simplify this using block_position->next later
-        //         block_position = get_next(block_position);
-                
-        //     }
-        //     if (!block_position) {
-        //         block_position_before->next = free_block;
-        //     } else {
-        //         memory_block_t* temp_block = block_position_before;
-        //         block_position_before->next = free_block;
-        //         free_block->next = temp_block;
-        //     }
-        // }
+        
+        if (free_head > free_block) {
+            free_block->next = free_head;
+            free_head = free_block;
+        } else {
+            memory_block_t* block_position = free_head;
+            while (get_next(block_position) && get_next(block_position) < free_block) {
+                block_position = get_next(block_position);
+            }
+            free_block->next = block_position->next;
+            block_position->next = free_block;
+        }
     } else {
         // throw a double free error here
     }

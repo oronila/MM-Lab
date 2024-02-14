@@ -27,10 +27,21 @@ int check_heap() {
     // Check that all blocks in the free list are marked free.
     // If a block is marked allocated, return -1.
     memory_block_t *cur = free_head;
-    while (cur) {
-        if (is_allocated(cur)) {
+    while (get_next(cur)) {
+        if (cur > get_next(cur)) {
             return -1;
         }
+
+        if (cur + (get_size(cur) / ALIGNMENT) > get_next(cur)) {
+            return -1;
+        }
+
+        if (get_size(cur) % ALIGNMENT != 0) {
+            return -1; // figure out how to do this for allocated blocks as well
+        }
+        cur = get_next(cur);
     }
+
+
     return 0;
 }
