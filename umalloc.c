@@ -125,6 +125,11 @@ memory_block_t *split(memory_block_t *block, size_t size) {
     memory_block_t* store_block = block->next;
     // only occurs after malloc calls
     if (size >= get_size(block)) {
+        if (block == free_head) {
+            free_head = free_head->next;
+            put_block(block, size, true);
+            return block;
+        }
         while (get_next(block_before) && get_next(block_before) != block) {
             block_before = get_next(block_before);
         }
