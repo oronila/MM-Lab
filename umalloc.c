@@ -97,6 +97,7 @@ memory_block_t *find(size_t size) {
     memory_block_t* find_block = free_head;
     while (find_block && get_size(find_block) <= size + ALIGNMENT) {
         // printf("size = %lu\n", find_block->block_metadata);
+        // printf("Loop?");
         find_block = get_next(find_block);
     }
 
@@ -112,7 +113,7 @@ memory_block_t *extend(size_t size) {
         return NULL;
     }
     
-    put_block(extra_block, size, false);
+    put_block(extra_block, size + PAGESIZE - ALIGNMENT, false);
     //* STUDENT TODO
     return extra_block;
 }
@@ -124,7 +125,8 @@ memory_block_t *split(memory_block_t *block, size_t size) {
     memory_block_t* block_before = free_head;
     memory_block_t* store_block = block->next;
     // only occurs after malloc calls
-    if (size >= get_size(block)) {
+
+    if (size == get_size(block)) {
         if (block == free_head) {
             free_head = free_head->next;
             put_block(block, size, true);
@@ -137,14 +139,16 @@ memory_block_t *split(memory_block_t *block, size_t size) {
         put_block(block, size, true);
         return block;
     }
+
     memory_block_t* allocated_block = NULL;
-    size_t old_size = block->block_metadata;
+    size_t old_size = get_size(block);
     if (block == free_head) {
         allocated_block = free_head;
         put_block(allocated_block, size, true);
         free_head += (size / ALIGNMENT) + 1;
         put_block(free_head, old_size - (size + ALIGNMENT), false);
         free_head->next = store_block;
+        allocated_block->next = NULL;
         return allocated_block;
     } 
     
@@ -160,6 +164,7 @@ memory_block_t *split(memory_block_t *block, size_t size) {
     put_block(block, old_size - (size + ALIGNMENT), false);
     block->next = store_block;
     block_before->next = block; // this is only extra line needed
+    allocated_block->next = NULL;
     return allocated_block;
 }
 
@@ -168,7 +173,7 @@ memory_block_t *split(memory_block_t *block, size_t size) {
  */
 memory_block_t *coalesce(memory_block_t *block) {
     // only occurs after free calls
-    if (block + (get_size(block) / 16) + ALIGNMENT == block->next) {
+    if (block->next && block + (get_size(block) / 16) + ALIGNMENT == block->next) {
         put_block(block, ALIGNMENT + get_size(block->next) + get_size(block), false);
         block->next = block->next->next;
     }
@@ -188,7 +193,7 @@ int uinit() {
         return -1;
     }
 
-    put_block(free_head, PAGESIZE * 4, false);
+    put_block(free_head, (PAGESIZE * 4) - ALIGNMENT, false); // this shouldn't include the header but everything breaks if i do
     return 0;
 }
 
@@ -202,7 +207,9 @@ void *umalloc(size_t size) {
         free_block = split(free_block, size);
     } else {
         free_block = extend(size);
-        if (free_head > free_block) {
+        if (free_head == NULL) {
+            free_head = free_block;
+        } else if (free_head > free_block) {
             free_block->next = free_head;
             free_head = free_block;
         } else {
@@ -213,6 +220,7 @@ void *umalloc(size_t size) {
             free_block->next = block_position->next;
             block_position->next = free_block;
         }
+        free_block = find(size);
         free_block = split(free_block, size);
     }
     
@@ -228,8 +236,9 @@ void ufree(void *ptr) {
     if (is_allocated(free_block)) {
         deallocate(free_block);
         // don't worry about coalescening right now
-        
-        if (free_head > free_block) {
+        if (free_head == NULL) {
+            free_head = free_block;
+        } else if (free_head > free_block) {
             free_block->next = free_head;
             free_head = free_block;
             coalesce(free_head);
@@ -240,7 +249,8 @@ void ufree(void *ptr) {
             }
             free_block->next = block_position->next;
             block_position->next = free_block;
-            coalesce(free_block);
+            // coalesce(free_block);
+            coalesce(block_position);
             coalesce(block_position);
         }
     } else {
