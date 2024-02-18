@@ -28,12 +28,12 @@ int check_heap() {
     // If a block is marked allocated, return -1.
     memory_block_t *cur = free_head;
     while (cur) {
-        if (cur > get_next(cur)) {
-
+        
+        if (get_next(cur) && cur > get_next(cur)) {
             return -1;
         }
 
-        if (cur + (get_size(cur) / ALIGNMENT) > get_next(cur)) {
+        if (get_next(cur) && cur + (get_size(cur) / ALIGNMENT) > get_next(cur)) {
             return -1;
         }
 
