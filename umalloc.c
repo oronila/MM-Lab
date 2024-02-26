@@ -97,12 +97,12 @@ memory_block_t *find(size_t size) {
     memory_block_t* find_block = free_head;
     memory_block_t* answer_block = NULL;
     int difference = -1;
-    while (find_block) { // && get_size(find_block) <= size + ALIGNMENT) {
+    while (find_block) { // && get_size(find_block) <= size + ALIGNMENT) { 
         // printf("size = %lu\n", find_block->block_metadata);
         // printf("Loop?");
-        if (get_size(find_block) >= size ) {//+ ALIGNMENT) {
-            if (difference == -1 || get_size(find_block) - (size + ALIGNMENT) < difference) {
-                difference = get_size(find_block) - (size + ALIGNMENT);
+        if (get_size(find_block) >= size) {//+ ALIGNMENT) {
+            if (difference == -1 || get_size(find_block) - (size) < difference) {
+                difference = get_size(find_block) - (size);
                 answer_block = find_block;
             }
             if (difference == 0) {
@@ -217,8 +217,9 @@ memory_block_t *coalesce(memory_block_t *block) {
     // only occurs after free calls
     if (block->next && !is_allocated(block->next) && block + (get_size(block) / 16) + 1 == block->next) {
         int old_size = get_size(block->next);
-        block->next = block->next->next;
+        memory_block_t* storage_block = block->next->next;
         put_block(block, ALIGNMENT + old_size + get_size(block), false);
+        block->next = storage_block;
     }
     //* STUDENT TODO
     return block;
@@ -290,7 +291,7 @@ void ufree(void *ptr) {
         } else if (free_head > free_block) {
             free_block->next = free_head;
             free_head = free_block;
-            coalesce(free_head);
+            coalesce(free_block);
         } else {
             memory_block_t* block_position = free_head;
             while (get_next(block_position) && get_next(block_position) < free_block) {
@@ -298,12 +299,14 @@ void ufree(void *ptr) {
             }
             free_block->next = block_position->next;
             block_position->next = free_block;
-            // coalesce(free_block);
+            coalesce(free_block);
             coalesce(block_position);
-            coalesce(block_position);
+            // coalesce(block_position);
         }
     } else {
+        // printf("THIS SHOULDNT PRINT \n\n\n\n\n");
         // throw a double free error here
+        // return NULL;
     }
     //* STUDENT TODO
 }
