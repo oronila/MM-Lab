@@ -181,9 +181,10 @@ memory_block_t *split(memory_block_t *block, size_t size) {
  */
 memory_block_t *coalesce(memory_block_t *block) {
     // only occurs after free calls
-    if (block->next && block + (get_size(block) / 16) + ALIGNMENT == block->next) {
-        put_block(block, ALIGNMENT + get_size(block->next) + get_size(block), false);
+    if (block->next && !is_allocated(block->next) && block + (get_size(block) / 16) + 1 == block->next) {
+        int old_size = get_size(block->next);
         block->next = block->next->next;
+        put_block(block, ALIGNMENT + old_size + get_size(block), false);
     }
     //* STUDENT TODO
     return block;
