@@ -105,6 +105,9 @@ memory_block_t *find(size_t size) {
                 difference = get_size(find_block) - (size + ALIGNMENT);
                 answer_block = find_block;
             }
+            if (difference == 0) {
+                return answer_block;
+            }
         }
         find_block = get_next(find_block);
     }
@@ -204,12 +207,13 @@ memory_block_t *coalesce(memory_block_t *block) {
  * along with allocating initial memory.
  */
 int uinit() {
-    free_head = csbrk(PAGESIZE * 3);
+    
+    free_head = csbrk((PAGESIZE * 33)/16);
     if(free_head == NULL) {
         return -1;
     }
 
-    put_block(free_head, (PAGESIZE * 3) - ALIGNMENT, false); // this shouldn't include the header but everything breaks if i do
+    put_block(free_head, ((PAGESIZE * 33)/16) - ALIGNMENT, false); // this shouldn't include the header but everything breaks if i do
     return 0;
 }
 
