@@ -108,12 +108,12 @@ memory_block_t *find(size_t size) {
  * extend - extends the heap if more memory is required.
  */
 memory_block_t *extend(size_t size) {
-    memory_block_t* extra_block = csbrk(size + PAGESIZE);
+    memory_block_t* extra_block = csbrk(size + ALIGNMENT);
     if (extra_block == NULL) {
         return NULL;
     }
     
-    put_block(extra_block, size + PAGESIZE - ALIGNMENT, false);
+    put_block(extra_block, size, true);
     //* STUDENT TODO
     return extra_block;
 }
@@ -207,21 +207,21 @@ void *umalloc(size_t size) {
         free_block = split(free_block, size);
     } else {
         free_block = extend(size);
-        if (free_head == NULL) {
-            free_head = free_block;
-        } else if (free_head > free_block) {
-            free_block->next = free_head;
-            free_head = free_block;
-        } else {
-            memory_block_t* block_position = free_head;
-            while (get_next(block_position) && get_next(block_position) < free_block) {
-                block_position = get_next(block_position);
-            }
-            free_block->next = block_position->next;
-            block_position->next = free_block;
-        }
-        free_block = find(size);
-        free_block = split(free_block, size);
+        // if (free_head == NULL) {
+        //     free_head = free_block;
+        // } else if (free_head > free_block) {
+        //     free_block->next = free_head;
+        //     free_head = free_block;
+        // } else {
+        //     memory_block_t* block_position = free_head;
+        //     while (get_next(block_position) && get_next(block_position) < free_block) {
+        //         block_position = get_next(block_position);
+        //     }
+        //     free_block->next = block_position->next;
+        //     block_position->next = free_block;
+        // }
+        // free_block = find(size);
+        // free_block = split(free_block, size);
     }
     
     return free_block + 1;
