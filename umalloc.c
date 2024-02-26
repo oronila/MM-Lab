@@ -112,19 +112,43 @@ memory_block_t *find(size_t size) {
         find_block = get_next(find_block);
     }
 
+    // while (find_block && get_size(find_block) <= size + ALIGNMENT) {
+    //     // printf("size = %lu\n", find_block->block_metadata);
+    //     // printf("Loop?");
+    //     // if (get_size(find_block) >= size ) {//+ ALIGNMENT) {
+    //     //     if (difference == -1 || get_size(find_block) - (size + ALIGNMENT) < difference) {
+    //     //         difference = get_size(find_block) - (size + ALIGNMENT);
+    //     //         answer_block = find_block;
+    //     //     }
+    //     //     if (difference == 0) {
+    //     //         return answer_block;
+    //     //     }
+    //     // }
+    //     find_block = get_next(find_block);
+    // }
+
     return answer_block;
+    // return find_block;
 }
 
 /*
  * extend - extends the heap if more memory is required.
  */
 memory_block_t *extend(size_t size) {
-    memory_block_t* extra_block = csbrk(size + ALIGNMENT);
+    memory_block_t* extra_block;
+    if (size < 512) {
+        extra_block = csbrk(PAGESIZE);
+        put_block(extra_block, PAGESIZE - ALIGNMENT, false);
+    } else {
+        extra_block = csbrk(size + ALIGNMENT);
+        put_block(extra_block, size, true);
+    }
+    
     if (extra_block == NULL) {
         return NULL;
     }
     
-    put_block(extra_block, size, true);
+    
     //* STUDENT TODO
     return extra_block;
 }
@@ -208,12 +232,12 @@ memory_block_t *coalesce(memory_block_t *block) {
  */
 int uinit() {
     
-    free_head = csbrk((PAGESIZE * 33)/16);
+    free_head = csbrk((PAGESIZE * 257)/128);
     if(free_head == NULL) {
         return -1;
     }
 
-    put_block(free_head, ((PAGESIZE * 33)/16) - ALIGNMENT, false); // this shouldn't include the header but everything breaks if i do
+    put_block(free_head, ((PAGESIZE * 257)/128) - ALIGNMENT, false); // this shouldn't include the header but everything breaks if i do
     return 0;
 }
 
@@ -226,22 +250,27 @@ void *umalloc(size_t size) {
     if (free_block) {
         free_block = split(free_block, size);
     } else {
-        free_block = extend(size);
-        // if (free_head == NULL) {
-        //     free_head = free_block;
-        // } else if (free_head > free_block) {
-        //     free_block->next = free_head;
-        //     free_head = free_block;
-        // } else {
-        //     memory_block_t* block_position = free_head;
-        //     while (get_next(block_position) && get_next(block_position) < free_block) {
-        //         block_position = get_next(block_position);
-        //     }
-        //     free_block->next = block_position->next;
-        //     block_position->next = free_block;
-        // }
-        // free_block = find(size);
-        // free_block = split(free_block, size);
+        
+        if (size < 512) { // min viable size
+            free_block = extend(size);
+            if (free_head == NULL) {
+                free_head = free_block;
+            } else if (free_head > free_block) {
+                free_block->next = free_head;
+                free_head = free_block;
+            } else {
+                memory_block_t* block_position = free_head;
+                while (get_next(block_position) && get_next(block_position) < free_block) {
+                    block_position = get_next(block_position);
+                }
+                free_block->next = block_position->next;
+                block_position->next = free_block;
+            }
+            free_block = split(free_block, size);
+        } else {
+            free_block = extend(size);
+        }
+        
     }
     
     return free_block + 1;
