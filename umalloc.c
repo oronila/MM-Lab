@@ -95,13 +95,21 @@ memory_block_t *get_block(void *payload) {
 memory_block_t *find(size_t size) {
     // STUDENT TODO (maybe coalesce blocks here if seen an opprotunity)
     memory_block_t* find_block = free_head;
-    while (find_block && get_size(find_block) <= size + ALIGNMENT) {
+    memory_block_t* answer_block = NULL;
+    int difference = -1;
+    while (find_block) { // && get_size(find_block) <= size + ALIGNMENT) {
         // printf("size = %lu\n", find_block->block_metadata);
         // printf("Loop?");
+        if (get_size(find_block) >= size ) {//+ ALIGNMENT) {
+            if (difference == -1 || get_size(find_block) - (size + ALIGNMENT) < difference) {
+                difference = get_size(find_block) - (size + ALIGNMENT);
+                answer_block = find_block;
+            }
+        }
         find_block = get_next(find_block);
     }
 
-    return find_block;
+    return answer_block;
 }
 
 /*
