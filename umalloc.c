@@ -127,6 +127,13 @@ memory_block_t *extend(size_t size) {
 }
 
 /*
+ * resetposition - makes the free list in order from largest to smallest
+ */
+// void resetposition(memory_block_t *block) {
+//     memory_block_t* block_position = free_head;
+//     if (block_position)
+// }
+/*
  * split - splits a given block in parts, one allocated, one free.
  */
 memory_block_t *split(memory_block_t *block, size_t size) {
@@ -197,12 +204,12 @@ memory_block_t *coalesce(memory_block_t *block) {
  * along with allocating initial memory.
  */
 int uinit() {
-    free_head = csbrk(PAGESIZE * 4);
+    free_head = csbrk(PAGESIZE * 3);
     if(free_head == NULL) {
         return -1;
     }
 
-    put_block(free_head, (PAGESIZE * 4) - ALIGNMENT, false); // this shouldn't include the header but everything breaks if i do
+    put_block(free_head, (PAGESIZE * 3) - ALIGNMENT, false); // this shouldn't include the header but everything breaks if i do
     return 0;
 }
 
