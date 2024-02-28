@@ -93,29 +93,18 @@ memory_block_t *get_block(void *payload) {
  * find - finds a free block that can satisfy the umalloc request.
  */
 memory_block_t *find(size_t size) {
-    // best fit search for a block satisfying the size in the list
+    // first fit search for a block satisfying the size in the list
     memory_block_t* find_block = free_head;
-    memory_block_t* best_block = NULL;
-    int difference = -1;
 
     while (find_block) { 
-        // checks if a block fits in the place correctly
+        // checks if a block fits
         if (get_size(find_block) >= size) {
-
-            // checks if there is a better fitting block in the free list
-            if (difference == -1 || get_size(find_block) - (size) < difference) {
-                difference = get_size(find_block) - (size);
-                best_block = find_block;
-            }
-            // auto return if best block already found
-            if (difference == 0) {
-                return best_block;
-            }
+            return find_block;
         }
         find_block = get_next(find_block);
     }
 
-    return best_block;
+    return find_block;
 }
 
 /*

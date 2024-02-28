@@ -23,9 +23,6 @@ extern memory_block_t *free_head;
  * return code. Asserts are also a useful tool here.
  */
 int check_heap() {
-    // Example heap check:
-    // Check that all blocks in the free list are marked free.
-    // If a block is marked allocated, return -1.
     memory_block_t *cur = free_head;
     while (cur) {
         
