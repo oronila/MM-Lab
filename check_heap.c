@@ -29,17 +29,21 @@ int check_heap() {
     memory_block_t *cur = free_head;
     while (cur) {
         
+        // checking if the list is in order by address
         if (get_next(cur) && cur > get_next(cur)) {
             return -1;
         }
 
+        // checking if any blocks are overlapping
         if (get_next(cur) && cur + (get_size(cur) / ALIGNMENT) > get_next(cur)) {
             return -1;
         }
 
+        // checking if the blocks misalign
         if (get_size(cur) % ALIGNMENT != 0) {
-            return -1; // figure out how to do this for allocated blocks as well
+            return -1;
         }
+
         cur = get_next(cur);
     }
 
