@@ -225,7 +225,6 @@ memory_block_t *coalesce(memory_block_t *block)
     if (block->next && !is_allocated(block->next) &&
         block + (get_size(block) / ALIGNMENT) + 1 == block->next)
     {
-
         size_t old_size = get_size(block->next);
 
         // storing block before put_block NULLs it out
@@ -244,13 +243,14 @@ memory_block_t *coalesce(memory_block_t *block)
 int uinit()
 {
     // getting the multiplier maximized for coalescing testing case
-    free_head = csbrk((PAGESIZE * 3));
+    int multiplier = 3;
+    free_head = csbrk((PAGESIZE * multiplier));
     if (free_head == NULL)
     {
         return -1;
     }
 
-    put_block(free_head, ((PAGESIZE * 3)) - ALIGNMENT, false);
+    put_block(free_head, ((PAGESIZE * multiplier)) - ALIGNMENT, false);
     return 0;
 }
 
