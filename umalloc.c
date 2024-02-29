@@ -114,7 +114,8 @@ memory_block_t *extend(size_t size) {
     memory_block_t* extra_block;
 
     // if less than 512 bytes called to be allocated then give a PAGESIZE
-    if (size < 512) {
+    int threshold = 512;
+    if (size < threshold) {
         extra_block = csbrk(PAGESIZE);
         put_block(extra_block, PAGESIZE - ALIGNMENT, false);
     } else {
@@ -206,9 +207,9 @@ memory_block_t *coalesce(memory_block_t *block) {
 
     // add connect blocks together if and only if the addresses line up next to each other
     if (block->next && !is_allocated(block->next) && 
-            block + (get_size(block) / 16) + 1 == block->next) {
+            block + (get_size(block) / ALIGNMENT) + 1 == block->next) {
 
-        int old_size = get_size(block->next);
+        size_t old_size = get_size(block->next);
 
         // storing block before put_block NULLs it out
         memory_block_t* storage_block = block->next->next;
@@ -227,12 +228,14 @@ memory_block_t *coalesce(memory_block_t *block) {
  */
 int uinit() {
     // getting the multiplier maximized for coalescing testing case
-    free_head = csbrk((PAGESIZE * 257)/128);
+    int multipler = 257;
+    int divider = 128;
+    free_head = csbrk((PAGESIZE * multipler)/divider);
     if(free_head == NULL) {
         return -1;
     }
 
-    put_block(free_head, ((PAGESIZE * 257)/128) - ALIGNMENT, false); 
+    put_block(free_head, ((PAGESIZE * multipler)/divider) - ALIGNMENT, false); 
     return 0;
 }
 
@@ -252,7 +255,8 @@ void *umalloc(size_t size) {
         free_block = split(free_block, size);
     } else {
         // extend heap
-        if (size < 512) {
+        int threshold = 512;
+        if (size < threshold) {
             // extend a PAGESIZE for small values and add extra back to heap
             free_block = extend(size);
 
